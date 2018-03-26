@@ -15,58 +15,62 @@ public class RSA {
 	
 	public void keyGen(int keyLength) throws IOException{
 		
-		FileOutputStream fospub = new FileOutputStream("pub.key");
-		FileOutputStream fospri = new FileOutputStream("pri.key");
-		
-		ObjectOutputStream objOutPub = new ObjectOutputStream(fospub);
-		ObjectOutputStream objOutPri = new ObjectOutputStream(fospri);
-		
-		
-		Random rnd = new Random();
-		BigInteger p = BigInteger.probablePrime(keyLength,rnd);
-		BigInteger q = p.nextProbablePrime();
-		n = p.multiply(q);
-		System.out.println("n " + n);
-		//(p-1) x (q-1)
-		BigInteger tn = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
-		
-		
-		//get e, should be relative prime to tn : gcd(tn, e) != 1
-		Random rnd1 = new Random();
-		
-		e = BigInteger.probablePrime(tn.bitLength()-1, rnd1);
-		if(!tn.gcd(e).equals(BigInteger.ONE)){
-			System.out.println("tn and e's are not relative prime");
-			while(!tn.gcd(e).equals(BigInteger.ONE)){
-				e = BigInteger.probablePrime(tn.bitLength()-1, rnd1);
+		try{
+			FileOutputStream fospub = new FileOutputStream("pub.key");
+			FileOutputStream fospri = new FileOutputStream("pri.key");
+			
+			ObjectOutputStream objOutPub = new ObjectOutputStream(fospub);
+			ObjectOutputStream objOutPri = new ObjectOutputStream(fospri);
+			
+			
+			Random rnd = new Random();
+			BigInteger p = BigInteger.probablePrime(keyLength,rnd);
+			BigInteger q = p.nextProbablePrime();
+			n = p.multiply(q);
+			System.out.println("n " + n);
+			//(p-1) x (q-1)
+			BigInteger tn = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+			
+			
+			//get e, should be relative prime to tn : gcd(tn, e) != 1
+			Random rnd1 = new Random();
+			
+			e = BigInteger.probablePrime(tn.bitLength()-1, rnd1);
+			if(!tn.gcd(e).equals(BigInteger.ONE)){
+				System.out.println("tn and e's are not relative prime");
+				while(!tn.gcd(e).equals(BigInteger.ONE)){
+					e = BigInteger.probablePrime(tn.bitLength()-1, rnd1);
+				}
 			}
+			
+			//get d : inverse of e (mod tn)
+			d = e.modInverse(tn);
+			
+			System.out.println("Writing public key and private key to the files");
+			
+			//public key
+			objOutPub.writeObject(e);
+			objOutPub.writeObject(n);
+			
+			//private key
+			objOutPri.writeObject(d);
+			objOutPri.writeObject(n);
+			
+			objOutPub.close();
+			objOutPri.close();
+			fospub.close();
+			fospri.close();
+			
+			System.out.println("Completed!");
+		}catch (IOException e){
+			System.out.println("Cannot open key file " + e );
 		}
-		
-		//get d : inverse of e (mod tn)
-		d = e.modInverse(tn);
-		
-		System.out.println("Writing public key and private key to the files");
-		
-		//public key
-		objOutPub.writeObject(e);
-		objOutPub.writeObject(n);
-		
-		//private key
-		objOutPri.writeObject(d);
-		objOutPri.writeObject(n);
-		
-		objOutPub.close();
-		objOutPri.close();
-		fospub.close();
-		fospri.close();
-		
-		System.out.println("Completed!");
 	}
-	public static BigInteger encrypt(BigInteger p){
+	public BigInteger encrypt(BigInteger p){
 		return p.modPow(e, n);
 		
 	}
-	public static BigInteger decrypt(BigInteger c){
+	public BigInteger decrypt(BigInteger c){
 		return c.modPow(d, n);
 	}
 	
@@ -76,10 +80,16 @@ public class RSA {
 		
 		BigInteger plaintext = new BigInteger("25");
 		BigInteger ciphertext;
-		ciphertext = rsa.encrypt(plaintext);
-		System.out.println("ciphertext: " + ciphertext);
-		System.out.println("plaintext: " + rsa.decrypt(ciphertext));
-		
+		try{
+			ciphertext = rsa.encrypt(plaintext);
+			if(ciphertext == null){
+				System.out.println("Please check if it's writable under ./");
+			}
+			System.out.println("ciphertext: " + ciphertext);
+			System.out.println("plaintext: " + rsa.decrypt(ciphertext));
+		}catch(NullPointerException ne){
+			System.out.println("Not able to write out to key files. Check if it's writable in ./");
+		}
 	}
 
 }

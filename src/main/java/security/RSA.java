@@ -13,12 +13,14 @@ public class RSA {
 	private static BigInteger e;
 	private static BigInteger d;
 	
-	public void keyGen(int keyLength) throws IOException{		
+	public void keyGen(int keyLength) throws IOException{
+		
 		FileOutputStream fospub = new FileOutputStream("pub.key");
 		FileOutputStream fospri = new FileOutputStream("pri.key");
 		
 		ObjectOutputStream objOutPub = new ObjectOutputStream(fospub);
 		ObjectOutputStream objOutPri = new ObjectOutputStream(fospri);
+		
 		
 		Random rnd = new Random();
 		BigInteger p = BigInteger.probablePrime(keyLength,rnd);
@@ -52,6 +54,11 @@ public class RSA {
 		//private key
 		objOutPri.writeObject(d);
 		objOutPri.writeObject(n);
+		
+		objOutPub.close();
+		objOutPri.close();
+		fospub.close();
+		fospri.close();
 		
 		System.out.println("Completed!");
 	}
